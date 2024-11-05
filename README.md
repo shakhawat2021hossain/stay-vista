@@ -1,4 +1,4 @@
-# stayVista-starter-template
+# Stay Vista
 
 - [Live Site](https://stayvista-live.web.app/)
 

@@ -12,12 +12,14 @@ import {
   updateProfile,
 } from 'firebase/auth'
 import { app } from '../firebase/firebase.config'
-import axios from 'axios'
+import useAxiosPublic from '../hooks/useAxiosPublic'
 export const AuthContext = createContext(null)
 const auth = getAuth(app)
 const googleProvider = new GoogleAuthProvider()
 
 const AuthProvider = ({ children }) => {
+  const axiosPublic = useAxiosPublic()
+
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -43,7 +45,7 @@ const AuthProvider = ({ children }) => {
 
   const logOut = async () => {
     setLoading(true)
-    await axios.get(`${import.meta.env.VITE_API_URL}/logout`, {
+    await axiosPublic.get(`/logout`, {
       withCredentials: true,
     })
     return signOut(auth)
@@ -57,8 +59,7 @@ const AuthProvider = ({ children }) => {
   }
   // Get token from server
   const getToken = async email => {
-    const { data } = await axios.post(
-      `${import.meta.env.VITE_API_URL}/jwt`,
+    const { data } = await axiosPublic.post('/jwt' ,
       { email },
       { withCredentials: true }
     )

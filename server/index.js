@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const jwt = require('jsonwebtoken')
 
-const port = process.env.PORT || 8000
+const port = process.env.PORT || 5000
 
 // middleware
 const corsOptions = {
@@ -88,6 +88,26 @@ app.get('/logout', async (req, res) => {
   } catch (err) {
     res.status(500).send(err)
   }
+})
+
+//collections
+const rooms = client.db("stay-vista").collection('rooms')
+
+app.get('/rooms', async (req, res) => {
+  const category = req.query.category
+  let query = {}
+  if (category && category !== 'null') {
+    query = { category };
+  }
+  const reslut = await rooms.find(query).toArray()
+  res.send(reslut);
+})
+app.get('/room/:id', async (req, res) => {
+  const id = req.params.id
+  const query = { _id: new ObjectId(id) }
+
+  const reslut = await rooms.findOne(query)
+  res.send(reslut)
 })
 
 app.listen(port, () => {

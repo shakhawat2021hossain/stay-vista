@@ -1,7 +1,48 @@
-import { Link } from 'react-router-dom'
-import { FcGoogle } from 'react-icons/fc'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import useAuth from '../../hooks/useAuth'
+import toast from 'react-hot-toast'
+import { ImSpinner9 } from "react-icons/im";
+import SocialLogin from '../../components/Shared/SocialLogin'
+
 
 const SignUp = () => {
+  const location = useLocation()
+  const from = location?.state
+  // console.log(from);
+
+  const { createUser, updateUserProfile, loading, setLoading } = useAuth()
+  const navigate = useNavigate()
+  const handleSignUp = async (e) => {
+    e.preventDefault()
+    const name = e.target.name.value;
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const image = e.target.image.files[0]
+    const formData = new FormData()
+    formData.append('image', image);
+    console.log(name, email, password, image);
+    try {
+      setLoading(true)
+      // 1. upload image to ibb
+      const { data } = await axios.post('https://api.imgbb.com/1/upload?key=37c60d712bf322e97597883e93903d85', formData)
+      // console.log(data.data.url);
+
+      // 2. registration
+      const result = await createUser(email, password)
+      console.log(result);
+
+      // 3. update user profile
+      await updateUserProfile(name, data.data.url)
+
+      navigate(from || '/')
+      toast.success("successfully register")
+    }
+    catch (err) {
+      console.log(err);
+      toast.error(err.message)
+    }
+  }
   return (
     <div className='flex justify-center items-center min-h-screen'>
       <div className='flex flex-col max-w-md p-6 rounded-md sm:p-10 bg-gray-100 text-gray-900'>
@@ -10,9 +51,8 @@ const SignUp = () => {
           <p className='text-sm text-gray-400'>Welcome to StayVista</p>
         </div>
         <form
-          noValidate=''
-          action=''
-          className='space-y-6 ng-untouched ng-pristine ng-valid'
+          onSubmit={handleSignUp}
+          className='space-y-6'
         >
           <div className='space-y-4'>
             <div>
@@ -77,7 +117,7 @@ const SignUp = () => {
               type='submit'
               className='bg-rose-500 w-full rounded-md py-3 text-white'
             >
-              Continue
+              {loading ? <ImSpinner9 className='animate-spin m-auto' /> : 'Continue'}
             </button>
           </div>
         </form>
@@ -88,11 +128,7 @@ const SignUp = () => {
           </p>
           <div className='flex-1 h-px sm:w-16 dark:bg-gray-700'></div>
         </div>
-        <div className='flex justify-center items-center space-x-2 border m-3 p-2 border-gray-300 border-rounded cursor-pointer'>
-          <FcGoogle size={32} />
-
-          <p>Continue with Google</p>
-        </div>
+        <SocialLogin></SocialLogin>
         <p className='px-6 text-sm text-center text-gray-400'>
           Already have an account?{' '}
           <Link

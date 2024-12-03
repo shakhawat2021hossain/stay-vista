@@ -4,6 +4,7 @@ import useAuth from '../../hooks/useAuth'
 import toast from 'react-hot-toast'
 import { ImSpinner9 } from "react-icons/im";
 import SocialLogin from '../../components/Shared/SocialLogin'
+import { imgUpload } from '../../api/utilities';
 
 
 const SignUp = () => {
@@ -19,13 +20,10 @@ const SignUp = () => {
     const email = e.target.email.value;
     const password = e.target.password.value;
     const image = e.target.image.files[0]
-    const formData = new FormData()
-    formData.append('image', image);
-    console.log(name, email, password, image);
     try {
       setLoading(true)
       // 1. upload image to ibb
-      const { data } = await axios.post('https://api.imgbb.com/1/upload?key=37c60d712bf322e97597883e93903d85', formData)
+      const imgURL = await imgUpload(image)
       // console.log(data.data.url);
 
       // 2. registration
@@ -33,7 +31,7 @@ const SignUp = () => {
       console.log(result);
 
       // 3. update user profile
-      await updateUserProfile(name, data.data.url)
+      await updateUserProfile(name, imgURL)
 
       navigate(from || '/')
       toast.success("successfully register")

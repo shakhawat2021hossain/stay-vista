@@ -3,7 +3,7 @@ const app = express()
 require('dotenv').config()
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
+const { MongoClient, ServerApiVersion, ObjectId, Timestamp } = require('mongodb')
 const jwt = require('jsonwebtoken')
 
 const port = process.env.PORT || 5000
@@ -92,6 +92,25 @@ app.get('/logout', async (req, res) => {
 
 //collections
 const rooms = client.db("stay-vista").collection('rooms')
+const usersCollection = client.db("stay-vista").collection('users')
+
+// save a user to DB
+app.put('/user', async (req, res) => {
+  const user = req.body
+  const isExist = await usersCollection.findOne({ email: user?.email })
+  if (isExist) return res.send(isExist)
+
+  const option = { upsert: true }
+  const query = { email: user?.email }
+  const updateDoc = {
+    $set: {
+      ...user,
+      timestamp: Date.now()
+    }
+  }
+  const result = await usersCollection.updateOne(query, updateDoc, option)
+  res.send(result)
+})
 
 app.get('/rooms', async (req, res) => {
   const category = req.query.category
@@ -102,12 +121,37 @@ app.get('/rooms', async (req, res) => {
   const reslut = await rooms.find(query).toArray()
   res.send(reslut);
 })
+
+app.post('/rooms', async (req, res) => {
+  const roomData = req.body;
+  const result = await rooms.insertOne(roomData)
+  res.send(result)
+})
+
 app.get('/room/:id', async (req, res) => {
   const id = req.params.id
   const query = { _id: new ObjectId(id) }
 
   const reslut = await rooms.findOne(query)
   res.send(reslut)
+})
+
+
+// show room in my listing
+app.get('/my-listings/:email', async (req, res) => {
+  const email = req.params.email;
+  const query = { 'host.email': email }
+
+  const result = await rooms.find(query).toArray()
+  res.send(result)
+})
+
+//delete a room
+app.delete('/room/:id', async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) }
+  const result = await rooms.deleteOne(query)
+  res.send(result)
 })
 
 app.listen(port, () => {

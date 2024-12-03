@@ -66,12 +66,23 @@ const AuthProvider = ({ children }) => {
     return data
   }
 
+  const saveUser = async user =>{
+    const currUser = {
+      email: user?.email,
+      role: 'guest',
+      status: 'verified'
+    }
+    const {data} = await axiosPublic.put('/user', currUser)
+    return data
+  }
+
   // onAuthStateChange
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser)
       if (currentUser) {
         getToken(currentUser.email)
+        saveUser(currentUser)
       }
       setLoading(false)
     })

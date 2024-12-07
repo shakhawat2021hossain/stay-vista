@@ -94,14 +94,23 @@ app.get('/logout', async (req, res) => {
 const rooms = client.db("stay-vista").collection('rooms')
 const usersCollection = client.db("stay-vista").collection('users')
 
-// save a user to DB
+// save a user to DB 
 app.put('/user', async (req, res) => {
   const user = req.body
-  const isExist = await usersCollection.findOne({ email: user?.email })
-  if (isExist) return res.send(isExist)
+  const query = { email: user?.email }
+
+  const isExist = await usersCollection.findOne(query)
+  if (isExist) {
+    if (user.status === 'requested') {
+      const result = await usersCollection.updateOne(query, { $set: { status: user?.status } })
+      res.send(result)
+    }
+    else {
+      return res.send(isExist)
+    }
+  }
 
   const option = { upsert: true }
-  const query = { email: user?.email }
   const updateDoc = {
     $set: {
       ...user,
@@ -109,6 +118,21 @@ app.put('/user', async (req, res) => {
     }
   }
   const result = await usersCollection.updateOne(query, updateDoc, option)
+  res.send(result)
+})
+
+// get all users data
+app.get('/users', async (req, res) => {
+  const result = await usersCollection.find().toArray()
+  res.send(result)
+
+})
+
+// get a user by email
+app.get('/user/:email', async (req, res) => {
+  const email = req.params.email
+  const query = { email }
+  const result = await usersCollection.findOne(query)
   res.send(result)
 })
 

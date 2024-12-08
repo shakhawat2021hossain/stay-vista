@@ -136,6 +136,20 @@ app.get('/user/:email', async (req, res) => {
   res.send(result)
 })
 
+// update user role
+app.patch('/user/role/:email', async(req, res) =>{
+  const email = req.params.email
+  const query = {email}
+  const user = req.body;
+  const updateDoc = {
+    $set: {
+      ...user, timestamp: Date.now()
+    }
+  }
+  const result = await usersCollection.updateOne(query, updateDoc)
+  res.send(result)
+})
+
 app.get('/rooms', async (req, res) => {
   const category = req.query.category
   let query = {}

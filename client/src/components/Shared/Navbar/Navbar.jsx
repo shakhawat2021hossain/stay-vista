@@ -4,46 +4,12 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import useAuth from '../../../hooks/useAuth'
 import avatarImg from '../../../assets/images/placeholder.jpg'
-import HostRequestModal from '../../Modal/HostRequestModal'
-import useAxiosSecure from '../../../hooks/useAxiosSecure'
-import toast from "react-hot-toast";
 
 
 const Navbar = () => {
-  const axiosSecure = useAxiosSecure()
-
   const { user, logOut } = useAuth()
-
+  
   const [isOpen, setIsOpen] = useState(false)
-
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const closeModal = () => {
-    setIsModalOpen(false)
-  }
-  const handleModal = async () => {
-
-    const currUser = {
-      email: user?.email,
-      role: 'guest',
-      status: 'requested'
-    }
-    try {
-      const { data } = await axiosSecure.put('/user', currUser);
-      if (data.modifiedCount > 0) {
-        toast.success("Wait for admin Approval")
-      }
-      else {
-        toast.error("No changes made, please wait for approval.");
-      }
-      console.log(data);
-    }
-    catch (err) {
-      console.error("Error in handleModal:", err);
-    }
-    finally {
-      closeModal()
-    }
-  }
 
 
   return (
@@ -64,19 +30,7 @@ const Navbar = () => {
             {/* Dropdown Menu */}
             <div className='relative'>
               <div className='flex flex-row items-center gap-3'>
-                {/* Become A Host btn */}
-                <div className='hidden md:block'>
-                  {user && (
-                    <button
-                      onClick={() => { setIsModalOpen(true) }}
-                      // disabled={!user}
-                      className='disabled:cursor-not-allowed cursor-pointer hover:bg-neutral-100 py-3 px-4 text-sm font-semibold rounded-full  transition'
-                    >
-                      Host your home
-                    </button>
-                  )}
-                </div>
-                <HostRequestModal isOpen={isModalOpen} closeModal={closeModal} handleModal={handleModal} />
+                
                 {/* Dropdown btn */}
                 <div
                   onClick={() => setIsOpen(!isOpen)}

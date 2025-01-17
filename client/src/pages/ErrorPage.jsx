@@ -29,10 +29,10 @@ const ErrorPage = () => {
           </h1>
           <p className='mt-4 text-gray-500 '>Here are some helpful links:</p>
 
-          <div className='flex items-center w-full mt-6 gap-x-3 shrink-0 sm:w-auto'>
+          <div className='flex items-center w-full mt-6 gap-x-3 sm:w-auto'>
             <button
               onClick={() => navigate(-1)}
-              className='flex items-center justify-center w-1/2 px-5 py-1 text-sm text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 sm:w-auto   hover:bg-gray-100 '
+              className='flex items-center justify-center px-5 py-3 font-semibold text-gray-700 transition-colors duration-200 bg-white border rounded-lg gap-x-2 whitespace-nowrap hover:bg-gray-100'
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'
@@ -54,6 +54,7 @@ const ErrorPage = () => {
 
             <Button label={'Take Me Home'} onClick={() => navigate('/')} />
           </div>
+
         </div>
       </div>
     </section>

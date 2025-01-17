@@ -19,22 +19,7 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
-// Verify Token Middleware
-const verifyToken = async (req, res, next) => {
-  const token = req.cookies?.token
-  console.log(token)
-  if (!token) {
-    return res.status(401).send({ message: 'unauthorized access' })
-  }
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-    if (err) {
-      console.log(err)
-      return res.status(401).send({ message: 'unauthorized access' })
-    }
-    req.user = decoded
-    next()
-  })
-}
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.28i6f.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
@@ -55,6 +40,68 @@ const dbConnect = async () => {
   }
 }
 dbConnect()
+
+//collections
+const rooms = client.db("stay-vista").collection('rooms')
+const usersCollection = client.db("stay-vista").collection('users')
+
+
+// Verify Token Middleware
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token
+  console.log(token);
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized access" })
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      console.log(err);
+      return res.status(401).send({ message: "unauthorized access" })
+    }
+    req.user = decoded
+    next()
+  })
+  // const token = req.cookies?.token
+  // console.log(token)
+  // if (!token) {
+  //   return res.status(401).send({ message: 'unauthorized access' })
+  // }
+  // jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+  //   if (err) {
+  //     console.log(err)
+  //     return res.status(401).send({ message: 'unauthorized access' })
+  //   }
+  //   req.user = decoded
+  //   next()
+  // })
+}
+
+// verify admin
+const verifyAdmin = async (req, res, next) => {
+  const user = req.user //req.user will come from the verify token middleware
+  const query = { email: user?.email }
+  const result = await usersCollection.findOne(query)
+
+  if (!result || result?.role !== 'admin') {
+    return res.status(401).send({ message: "Unauthorized Access!!" })
+  }
+  next()
+
+}
+
+
+// Verify Host
+const verifyHost = async (req, res, next) => {
+  const user = req.user //req.user will come from the verify token middleware
+  const query = { email: user?.email }
+  const result = await usersCollection.findOne(query)
+
+  if (!result || result?.role !== 'host') {
+    return res.status(401).send({ message: "Unauthorized Access!" })
+  }
+  next()
+
+}
 
 app.get('/', (req, res) => {
   res.send('Hello from StayVista Server..')
@@ -90,9 +137,6 @@ app.get('/logout', async (req, res) => {
   }
 })
 
-//collections
-const rooms = client.db("stay-vista").collection('rooms')
-const usersCollection = client.db("stay-vista").collection('users')
 
 // save a user to DB 
 app.put('/user', async (req, res) => {
@@ -122,7 +166,7 @@ app.put('/user', async (req, res) => {
 })
 
 // get all users data
-app.get('/users', async (req, res) => {
+app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
   const result = await usersCollection.find().toArray()
   res.send(result)
 
@@ -137,9 +181,9 @@ app.get('/user/:email', async (req, res) => {
 })
 
 // update user role
-app.patch('/user/role/:email', async(req, res) =>{
+app.patch('/user/role/:email', async (req, res) => {
   const email = req.params.email
-  const query = {email}
+  const query = { email }
   const user = req.body;
   const updateDoc = {
     $set: {
@@ -147,7 +191,7 @@ app.patch('/user/role/:email', async(req, res) =>{
     }
   }
   const result = await usersCollection.updateOne(query, updateDoc)
-  res.send(result)
+  res.send(result) 
 })
 
 app.get('/rooms', async (req, res) => {
@@ -160,7 +204,8 @@ app.get('/rooms', async (req, res) => {
   res.send(reslut);
 })
 
-app.post('/rooms', async (req, res) => {
+//save a room to DB
+app.post('/rooms', verifyToken, verifyHost, async (req, res) => {
   const roomData = req.body;
   const result = await rooms.insertOne(roomData)
   res.send(result)
@@ -176,7 +221,7 @@ app.get('/room/:id', async (req, res) => {
 
 
 // show room in my listing
-app.get('/my-listings/:email', async (req, res) => {
+app.get('/my-listings/:email', verifyToken, verifyHost, async (req, res) => {
   const email = req.params.email;
   const query = { 'host.email': email }
 
@@ -185,7 +230,7 @@ app.get('/my-listings/:email', async (req, res) => {
 })
 
 //delete a room
-app.delete('/room/:id', async (req, res) => {
+app.delete('/room/:id', verifyToken, verifyHost, async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) }
   const result = await rooms.deleteOne(query)

@@ -4,7 +4,9 @@ import UpdateUserModal from '../Modal/UpdateUserModal'
 import { useMutation } from '@tanstack/react-query';
 import useAxiosSecure from '../../hooks/useAxiosSecure';
 import toast from 'react-hot-toast';
+import useAuth from '../../hooks/useAuth';
 const UserDataRow = ({ user, refetch }) => {
+    const {user: loggedInUser} = useAuth()
     const [isOpen, setIsOpen] = useState(false);
     const axiosSecure = useAxiosSecure()
 
@@ -21,12 +23,16 @@ const UserDataRow = ({ user, refetch }) => {
 
     const modalHandler = async(selected) =>{
         // console.log("user role updated", selected);
-        const user = {
+        if(loggedInUser?.email === user?.email){
+            toast.error("Not Allowed")
+            return setIsOpen(false)
+        }
+        const userRole = {
             role: selected,
             status: 'verified'
         }
         try{
-            const data = await mutateAsync(user)
+            const data = await mutateAsync(userRole)
             console.log(data);
         }
         catch(err){
